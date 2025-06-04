@@ -83,59 +83,59 @@ const GameUI = ({ onSpin }: GameUIProps) => {
 
   return (
     <div className="space-y-3">
-      {/* Compact Info & Controls Combined */}
+      {/* Single Line: Balance | Bet Controls | Last Win */}
       <div className="bg-gray-800 rounded-lg p-3 border border-gray-600">
-        {/* Top Row: Balance and Last Win */}
-        <div className="flex justify-between items-center mb-2 text-xs">
-          <div className="text-center">
+        <div className="flex items-center justify-between text-xs">
+          {/* Balance */}
+          <div className="text-center flex-1">
             <div className="text-gray-400 uppercase tracking-wide">Balance</div>
             <div className="text-green-400 font-mono font-bold">{formatCurrency(balance)}</div>
           </div>
-          <div className="text-center">
+          
+          {/* Bet Controls - Center */}
+          <div className="flex items-center space-x-2 flex-1 justify-center">
+            <button
+              onClick={decreaseBet}
+              disabled={isSpinning || currentBet <= 0.01}
+              className={`
+                w-7 h-7 rounded-full font-bold text-sm transition-all duration-200
+                ${isSpinning || currentBet <= 0.01
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : 'bg-red-600 hover:bg-red-500 text-white hover:scale-110 active:scale-95'
+                }
+              `}
+            >
+              −
+            </button>
+            
+            <div className="bg-black rounded px-3 py-1 border border-yellow-400">
+              <div className="text-yellow-400 font-mono text-sm font-bold">
+                {formatCurrency(currentBet)}
+              </div>
+            </div>
+            
+            <button
+              onClick={increaseBet}
+              disabled={isSpinning}
+              className={`
+                w-7 h-7 rounded-full font-bold text-sm transition-all duration-200
+                ${isSpinning
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : 'bg-green-600 hover:bg-green-500 text-white hover:scale-110 active:scale-95'
+                }
+              `}
+            >
+              +
+            </button>
+          </div>
+          
+          {/* Last Win */}
+          <div className="text-center flex-1">
             <div className="text-gray-400 uppercase tracking-wide">Last Win</div>
             <div className={`font-mono font-bold ${lastWin > 0 ? 'text-green-400' : 'text-gray-500'}`}>
               {formatCurrency(lastWin)}
             </div>
           </div>
-        </div>
-        
-        {/* Bottom Row: Bet Controls */}
-        <div className="flex items-center justify-center space-x-3">
-          <button
-            onClick={decreaseBet}
-            disabled={isSpinning || currentBet <= 0.01}
-            className={`
-              w-8 h-8 rounded-full font-bold text-sm transition-all duration-200
-              ${isSpinning || currentBet <= 0.01
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                : 'bg-red-600 hover:bg-red-500 text-white hover:scale-110 active:scale-95'
-              }
-            `}
-          >
-            −
-          </button>
-          
-          <div className="flex-1 text-center">
-            <div className="bg-black rounded px-4 py-1 border border-yellow-400">
-              <div className="text-yellow-400 font-mono text-lg font-bold">
-                {formatCurrency(currentBet)}
-              </div>
-            </div>
-          </div>
-          
-          <button
-            onClick={increaseBet}
-            disabled={isSpinning}
-            className={`
-              w-8 h-8 rounded-full font-bold text-sm transition-all duration-200
-              ${isSpinning
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                : 'bg-green-600 hover:bg-green-500 text-white hover:scale-110 active:scale-95'
-              }
-            `}
-          >
-            +
-          </button>
         </div>
       </div>
 
