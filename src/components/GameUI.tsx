@@ -10,7 +10,7 @@ interface GameUIProps {
 
 const GameUI = ({ onSpin }: GameUIProps) => {
   const spinButtonRef = useRef<HTMLButtonElement>(null)
-  const { balance, isSpinning, lastWin, currentBet, setBet, winningLines } = useGameStore()
+  const { balance, isSpinning, currentBet, setBet } = useGameStore()
 
   useEffect(() => {
     // Initialize button with hover animations
@@ -62,22 +62,6 @@ const GameUI = ({ onSpin }: GameUIProps) => {
     }
   }, [])
 
-  // Win celebration animation
-  useEffect(() => {
-    if (lastWin > 0) {
-      gsap.fromTo('.win-display', 
-        { scale: 0, opacity: 0 },
-        { 
-          scale: 1, 
-          opacity: 1, 
-          duration: 0.5, 
-          ease: "back.out(1.7)",
-          delay: 0.2
-        }
-      )
-    }
-  }, [lastWin])
-
   const handleSpinClick = () => {
     if (!isSpinning && balance >= currentBet) {
       // Button press animation
@@ -95,43 +79,8 @@ const GameUI = ({ onSpin }: GameUIProps) => {
 
   const betOptions = [5, 10, 25, 50]
 
-  // Generate win message based on number of lines
-  const getWinMessage = () => {
-    if (lastWin === 0) return ''
-    
-    const lineCount = winningLines.length
-    if (lineCount === 1) {
-      return `🎉 WIN ${lastWin}! 🎉`
-    } else if (lineCount === 2) {
-      return `🎉🎉 ${lineCount} LINES - WIN $${lastWin}! 🎉🎉`
-    } else if (lineCount >= 3) {
-      return `🚨🎉 ${lineCount} LINES - BIG WIN $${lastWin}! 🎉🚨`
-    }
-    return `🎉 WIN $${lastWin}! 🎉`
-  }
-
   return (
     <div className="space-y-4">
-      {/* Win Display */}
-      {lastWin > 0 && (
-        <div className="win-display text-center">
-          <div className={`px-4 py-2 rounded-lg font-bold text-lg md:text-xl ${
-            winningLines.length >= 3 
-              ? 'bg-gradient-to-r from-red-400 via-yellow-400 to-orange-500 text-black animate-pulse' 
-              : winningLines.length === 2
-              ? 'bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-500 text-black'
-              : 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black'
-          }`}>
-            {getWinMessage()}
-          </div>
-          {winningLines.length > 1 && (
-            <div className="text-xs text-gray-400 mt-1">
-              Lines: {winningLines.map(i => i + 1).join(', ')}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Bet Selection */}
       <div className="flex flex-col space-y-2">
         <div className="grid grid-cols-4 gap-2">
