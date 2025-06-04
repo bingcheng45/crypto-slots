@@ -11,7 +11,8 @@ export interface GameState {
 
 export interface GameActions {
   spin: () => void
-  setBet: (amount: number) => void
+  increaseBet: () => void
+  decreaseBet: () => void
   addBalance: (amount: number) => void
   setSpinning: (spinning: boolean) => void
 }
@@ -20,6 +21,11 @@ export interface GameStore extends GameState, GameActions {}
 
 // Crypto symbols for the slot machine
 const SYMBOLS = ['₿', 'Ξ', '◈', '🪙', '💎', '⚡', '🌟']
+
+// Bet increment levels
+const BET_LEVELS = [
+  0.01, 0.02, 0.05, 0.10, 0.25, 0.50, 1.00, 2.00, 5.00, 10.00, 25.00, 50.00, 100.00
+]
 
 // Enhanced win logic: 5 winning lines
 const checkWin = (reels: string[][]): { totalWin: number; winningLines: number[] } => {
@@ -64,7 +70,7 @@ const checkWin = (reels: string[][]): { totalWin: number; winningLines: number[]
 
 export const useGameStore = create<GameStore>((set, get) => ({
   // Initial state
-  balance: 1000,
+  balance: 100.00,
   isSpinning: false,
   lastWin: 0,
   reels: [
@@ -72,7 +78,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     ['💎', 'Ξ', '🪙'],
     ['◈', '🌟', '₿']
   ],
-  currentBet: 10,
+  currentBet: 0.01,
   winningLines: [],
 
   // Actions
@@ -82,7 +88,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     // Deduct bet amount
     set({ 
-      balance: state.balance - state.currentBet,
+      balance: Math.round((state.balance - state.currentBet) * 100) / 100,
       isSpinning: true,
       lastWin: 0,
       winningLines: []
@@ -111,27 +117,47 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       const { totalWin, winningLines } = checkWin(newReels)
       const currentState = get()
+      
+      // Calculate actual win amount based on bet
+      const actualWin = Math.round((totalWin * currentState.currentBet) * 100) / 100
 
       set({
         reels: newReels,
         isSpinning: false,
-        lastWin: totalWin,
+        lastWin: actualWin,
         winningLines,
-        balance: currentState.balance + totalWin
+        balance: Math.round((currentState.balance + actualWin) * 100) / 100
       })
     }, 2000) // 2 second spin duration
   },
 
-  setBet: (amount: number) => {
+  increaseBet: () => {
     const state = get()
-    if (!state.isSpinning && amount > 0 && amount <= state.balance) {
-      set({ currentBet: amount })
+    if (state.isSpinning) return
+    
+    const currentIndex = BET_LEVELS.findIndex(level => level === state.currentBet)
+    const nextIndex = Math.min(currentIndex + 1, BET_LEVELS.length - 1)
+    const newBet = BET_LEVELS[nextIndex]
+    
+    // Only increase if player has enough balance
+    if (newBet <= state.balance) {
+      set({ currentBet: newBet })
     }
+  },
+
+  decreaseBet: () => {
+    const state = get()
+    if (state.isSpinning) return
+    
+    const currentIndex = BET_LEVELS.findIndex(level => level === state.currentBet)
+    const prevIndex = Math.max(currentIndex - 1, 0)
+    
+    set({ currentBet: BET_LEVELS[prevIndex] })
   },
 
   addBalance: (amount: number) => {
     const state = get()
-    set({ balance: state.balance + amount })
+    set({ balance: Math.round((state.balance + amount) * 100) / 100 })
   },
 
   setSpinning: (spinning: boolean) => {

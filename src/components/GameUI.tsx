@@ -10,7 +10,7 @@ interface GameUIProps {
 
 const GameUI = ({ onSpin }: GameUIProps) => {
   const spinButtonRef = useRef<HTMLButtonElement>(null)
-  const { balance, isSpinning, currentBet, setBet } = useGameStore()
+  const { balance, isSpinning, currentBet, lastWin, increaseBet, decreaseBet } = useGameStore()
 
   useEffect(() => {
     // Initialize button with hover animations
@@ -77,33 +77,91 @@ const GameUI = ({ onSpin }: GameUIProps) => {
     }
   }
 
-  const betOptions = [5, 10, 25, 50]
+  const formatCurrency = (amount: number) => {
+    return `$${amount.toFixed(2)}`
+  }
 
   return (
     <div className="space-y-4">
-      {/* Bet Selection */}
-      <div className="flex flex-col space-y-2">
-        <div className="grid grid-cols-4 gap-2">
-          {betOptions.map((amount) => (
-            <button
-              key={amount}
-              onClick={() => setBet(amount)}
-              disabled={isSpinning || balance < amount}
-              className={`
-                px-3 py-2 text-sm font-medium rounded transition-all duration-200
-                ${currentBet === amount 
-                  ? 'bg-yellow-500 text-black' 
-                  : 'bg-gray-700 text-white hover:bg-gray-600'
-                }
-                ${(isSpinning || balance < amount) 
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : 'hover:scale-105'
-                }
-              `}
-            >
-              ${amount}
-            </button>
-          ))}
+      {/* Game Info Container */}
+      <div className="bg-gray-800 rounded-lg p-4 border border-gray-600">
+        <div className="grid grid-cols-3 gap-4 text-center">
+          {/* Balance */}
+          <div>
+            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">
+              Balance
+            </div>
+            <div className="text-green-400 font-mono text-lg font-bold">
+              {formatCurrency(balance)}
+            </div>
+          </div>
+          
+          {/* Current Bet */}
+          <div>
+            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">
+              Current Bet
+            </div>
+            <div className="text-yellow-400 font-mono text-lg font-bold">
+              {formatCurrency(currentBet)}
+            </div>
+          </div>
+          
+          {/* Last Win */}
+          <div>
+            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">
+              Last Win
+            </div>
+            <div className={`font-mono text-lg font-bold ${lastWin > 0 ? 'text-green-400' : 'text-gray-500'}`}>
+              {formatCurrency(lastWin)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bet Controls */}
+      <div className="bg-gray-800 rounded-lg p-4 border border-gray-600">
+        <div className="text-gray-400 text-xs uppercase tracking-wider mb-3 text-center">
+          Bet Amount
+        </div>
+        <div className="flex items-center justify-center space-x-4">
+          {/* Decrease Bet Button */}
+          <button
+            onClick={decreaseBet}
+            disabled={isSpinning || currentBet <= 0.01}
+            className={`
+              w-12 h-12 rounded-full font-bold text-xl transition-all duration-200
+              ${isSpinning || currentBet <= 0.01
+                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                : 'bg-red-600 hover:bg-red-500 text-white hover:scale-110 active:scale-95'
+              }
+            `}
+          >
+            −
+          </button>
+          
+          {/* Current Bet Display */}
+          <div className="flex-1 text-center">
+            <div className="bg-black rounded-lg py-3 px-6 border border-yellow-400">
+              <div className="text-yellow-400 font-mono text-2xl font-bold">
+                {formatCurrency(currentBet)}
+              </div>
+            </div>
+          </div>
+          
+          {/* Increase Bet Button */}
+          <button
+            onClick={increaseBet}
+            disabled={isSpinning}
+            className={`
+              w-12 h-12 rounded-full font-bold text-xl transition-all duration-200
+              ${isSpinning
+                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                : 'bg-green-600 hover:bg-green-500 text-white hover:scale-110 active:scale-95'
+              }
+            `}
+          >
+            +
+          </button>
         </div>
       </div>
 
@@ -132,8 +190,8 @@ const GameUI = ({ onSpin }: GameUIProps) => {
 
       {/* Insufficient Balance Warning */}
       {balance < currentBet && (
-        <div className="text-center text-red-400 text-sm">
-          Insufficient balance! Current: ${balance}
+        <div className="text-center text-red-400 text-sm bg-red-900/20 border border-red-600 rounded-lg p-2">
+          Insufficient balance! Reduce bet or add more funds.
         </div>
       )}
     </div>

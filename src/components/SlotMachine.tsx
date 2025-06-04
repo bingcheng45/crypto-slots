@@ -9,7 +9,7 @@ import { useGameStore } from '@/store/gameStore'
 const SlotMachine = () => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isLoaded, setIsLoaded] = useState(false)
-  const { balance, isSpinning, spin } = useGameStore()
+  const { balance, isSpinning, currentBet, spin } = useGameStore()
 
   useEffect(() => {
     // Initialize the slot machine with a smooth fade-in
@@ -23,7 +23,7 @@ const SlotMachine = () => {
   }, [])
 
   const handleSpin = () => {
-    if (!isSpinning && balance >= 10) {
+    if (!isSpinning && balance >= currentBet) {
       spin()
     }
   }
