@@ -82,54 +82,30 @@ const GameUI = ({ onSpin }: GameUIProps) => {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Game Info Container */}
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-600">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          {/* Balance */}
-          <div>
-            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">
-              Balance
-            </div>
-            <div className="text-green-400 font-mono text-lg font-bold">
-              {formatCurrency(balance)}
-            </div>
+    <div className="space-y-3">
+      {/* Compact Info & Controls Combined */}
+      <div className="bg-gray-800 rounded-lg p-3 border border-gray-600">
+        {/* Top Row: Balance and Last Win */}
+        <div className="flex justify-between items-center mb-2 text-xs">
+          <div className="text-center">
+            <div className="text-gray-400 uppercase tracking-wide">Balance</div>
+            <div className="text-green-400 font-mono font-bold">{formatCurrency(balance)}</div>
           </div>
-          
-          {/* Current Bet */}
-          <div>
-            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">
-              Current Bet
-            </div>
-            <div className="text-yellow-400 font-mono text-lg font-bold">
-              {formatCurrency(currentBet)}
-            </div>
-          </div>
-          
-          {/* Last Win */}
-          <div>
-            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">
-              Last Win
-            </div>
-            <div className={`font-mono text-lg font-bold ${lastWin > 0 ? 'text-green-400' : 'text-gray-500'}`}>
+          <div className="text-center">
+            <div className="text-gray-400 uppercase tracking-wide">Last Win</div>
+            <div className={`font-mono font-bold ${lastWin > 0 ? 'text-green-400' : 'text-gray-500'}`}>
               {formatCurrency(lastWin)}
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Bet Controls */}
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-600">
-        <div className="text-gray-400 text-xs uppercase tracking-wider mb-3 text-center">
-          Bet Amount
-        </div>
-        <div className="flex items-center justify-center space-x-4">
-          {/* Decrease Bet Button */}
+        
+        {/* Bottom Row: Bet Controls */}
+        <div className="flex items-center justify-center space-x-3">
           <button
             onClick={decreaseBet}
             disabled={isSpinning || currentBet <= 0.01}
             className={`
-              w-12 h-12 rounded-full font-bold text-xl transition-all duration-200
+              w-8 h-8 rounded-full font-bold text-sm transition-all duration-200
               ${isSpinning || currentBet <= 0.01
                 ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                 : 'bg-red-600 hover:bg-red-500 text-white hover:scale-110 active:scale-95'
@@ -139,21 +115,19 @@ const GameUI = ({ onSpin }: GameUIProps) => {
             −
           </button>
           
-          {/* Current Bet Display */}
           <div className="flex-1 text-center">
-            <div className="bg-black rounded-lg py-3 px-6 border border-yellow-400">
-              <div className="text-yellow-400 font-mono text-2xl font-bold">
+            <div className="bg-black rounded px-4 py-1 border border-yellow-400">
+              <div className="text-yellow-400 font-mono text-lg font-bold">
                 {formatCurrency(currentBet)}
               </div>
             </div>
           </div>
           
-          {/* Increase Bet Button */}
           <button
             onClick={increaseBet}
             disabled={isSpinning}
             className={`
-              w-12 h-12 rounded-full font-bold text-xl transition-all duration-200
+              w-8 h-8 rounded-full font-bold text-sm transition-all duration-200
               ${isSpinning
                 ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                 : 'bg-green-600 hover:bg-green-500 text-white hover:scale-110 active:scale-95'
@@ -165,13 +139,13 @@ const GameUI = ({ onSpin }: GameUIProps) => {
         </div>
       </div>
 
-      {/* Spin Button */}
+      {/* Compact Spin Button */}
       <button
         ref={spinButtonRef}
         onClick={handleSpinClick}
         disabled={isSpinning || balance < currentBet}
         className={`
-          w-full py-4 text-xl font-bold rounded-lg transition-all duration-200
+          w-full py-3 text-lg font-bold rounded-lg transition-all duration-200
           ${isSpinning || balance < currentBet
             ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
             : 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg hover:shadow-xl'
@@ -180,7 +154,7 @@ const GameUI = ({ onSpin }: GameUIProps) => {
       >
         {isSpinning ? (
           <div className="flex items-center justify-center space-x-2">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
             <span>SPINNING...</span>
           </div>
         ) : (
@@ -188,10 +162,10 @@ const GameUI = ({ onSpin }: GameUIProps) => {
         )}
       </button>
 
-      {/* Insufficient Balance Warning */}
+      {/* Compact Warning */}
       {balance < currentBet && (
-        <div className="text-center text-red-400 text-sm bg-red-900/20 border border-red-600 rounded-lg p-2">
-          Insufficient balance! Reduce bet or add more funds.
+        <div className="text-center text-red-400 text-xs bg-red-900/20 border border-red-600 rounded p-2">
+          Insufficient balance!
         </div>
       )}
     </div>
