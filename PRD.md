@@ -4,12 +4,14 @@
 
 **Product Name**: Crypto Slots  
 **Version**: 1.0.0  
-**Last Updated**: Initial Creation  
+**Last Updated**: Updated Animation Framework to GSAP  
 **Status**: Planning Phase
 
 ## Vision
 
-A modern, engaging crypto-themed slot machine game that combines the excitement of traditional casino slots with cryptocurrency aesthetics and modern web technologies.
+A modern, engaging crypto-themed slot machine game that **prioritizes exceptional user experience through buttery-smooth animations and immersive audio**. The game combines the excitement of traditional casino slots with cryptocurrency aesthetics and cutting-edge web technologies, delivering a premium gaming experience where every interaction feels polished and responsive.
+
+**Core Philosophy**: Smooth animations are not optional - they ARE the product. Every spin, button press, and win celebration must feel satisfying and immediate.
 
 ## Core Features
 
@@ -37,14 +39,19 @@ A modern, engaging crypto-themed slot machine game that combines the excitement 
 - **Frontend**: Next.js 14 with App Router, React, Tailwind CSS
 - **Backend**: Next.js API routes, MongoDB with Mongoose
 - **Authentication**: NextAuth.js
-- **Styling**: Tailwind CSS, Framer Motion for animations
+- **Styling**: Tailwind CSS, GSAP for animations
+- **Audio**: Web Audio API with spatial audio for immersive soundscapes
 - **Deployment**: Vercel
 
 ### Key Technical Decisions
+- **User Experience First**: Every technical decision prioritizes smooth, responsive interactions
 - Server-first approach with React Server Components
 - TypeScript for type safety
 - Mobile-first responsive design
 - Optimized for Web Vitals (LCP, CLS, FID)
+- **GSAP for animations**: Chosen for superior performance in slot machine mechanics, precise timing control, and industry-standard casino game animations
+- **60fps minimum**: All animations must maintain consistent 60fps on modern devices
+- **Audio-visual sync**: Perfect synchronization between sound effects and visual animations
 
 ## User Stories
 
@@ -110,15 +117,19 @@ A modern, engaging crypto-themed slot machine game that combines the excitement 
 ## Success Metrics
 
 ### Technical KPIs
+- **Animation Performance**: 60fps during 95% of gameplay sessions
 - Page load time < 2 seconds
+- **Input Responsiveness**: <16ms button press to visual feedback
 - 99.9% uptime
 - Mobile responsiveness score > 95%
 
 ### User Engagement KPIs
+- **Animation Satisfaction**: User feedback on smoothness (>4.5/5)
 - Daily active users
-- Session duration
+- Session duration (target: increased by smooth UX)
 - Games played per session
 - User retention rate
+- **Audio Experience**: Users playing with sound enabled (>80%)
 
 ## Current Progress
 
@@ -148,12 +159,70 @@ A modern, engaging crypto-themed slot machine game that combines the excitement 
 - Tailwind CSS
 - NextAuth.js
 - Mongoose
-- Framer Motion (animations)
+- **GSAP (GreenSock Animation Platform)** - Professional-grade animations for slot mechanics
+
+### Animation-Specific Dependencies
+- **GSAP Core**: Base animation engine
+- **GSAP ScrollTrigger**: Scroll-based animations (optional)
+- **GSAP MotionPath**: Advanced path animations for special effects
+- **GSAP TextPlugin**: Animated text effects for win amounts
+
+## Animation & Audio Requirements (PRIMARY FOCUS)
+
+### #1 Priority: Smooth User Experience
+**Non-negotiable requirements:**
+- **Reel Spinning**: Silky smooth rotation with realistic physics and momentum
+- **Button Press Feedback**: Instant visual and haptic response (<16ms)
+- **Win Celebrations**: Choreographed multi-layered animations that feel rewarding
+- **Sound Integration**: Perfectly timed audio cues that enhance every interaction
+- **Loading States**: Engaging animations that mask any perceived waiting time
+
+### GSAP Implementation Strategy
+- **Reel Spinning**: Timeline-based animations with precise easing control
+  - Realistic acceleration and deceleration curves
+  - Individual symbol bounce and settle animations
+  - Smooth stop sequences with anticipation
+- **Symbol Reveals**: Staggered animations with physics-based bouncing
+- **Win Celebrations**: Complex multi-element choreography
+  - Cascading coin animations
+  - Screen-shake effects for big wins
+  - Progressive reveal of win amounts
+- **Button Interactions**: Immediate press/release animations with scale and color transitions
+- **Particle Effects**: Coin showers and confetti using GSAP's morphing capabilities
+- **Performance**: Hardware acceleration and optimized rendering for 60fps gameplay
+
+### Audio Experience
+- **Spatial Audio**: 3D positioned sounds for reel spinning and coin drops
+- **Dynamic Mixing**: Volume and effects adjust based on win amounts
+- **Sound Categories**:
+  - **Reel Sounds**: Mechanical clicks, whooshes, and stops
+  - **UI Sounds**: Button clicks, hovers, and confirmations
+  - **Win Sounds**: Escalating celebration audio based on payout
+  - **Ambient**: Subtle background casino atmosphere
+- **Audio Sync**: Frame-perfect synchronization with visual animations
+
+### Animation Priorities
+1. **Reel Motion (CRITICAL)**: Authentic slot machine physics with perfect timing
+2. **Button Feedback (CRITICAL)**: Zero-latency visual response to user input
+3. **Win Celebrations (CRITICAL)**: Dopamine-triggering reward animations
+4. **Sound Integration (CRITICAL)**: Audio that makes every action feel impactful
+5. **Loading States**: Seamless transitions that maintain engagement
+6. **Mobile Optimization**: Touch-friendly animations with reduced motion options
+
+### Performance Standards
+- **Frame Rate**: Consistent 60fps during gameplay
+- **Input Lag**: <16ms response time for all interactions
+- **Animation Smoothness**: No frame drops during critical sequences
+- **Memory Usage**: Efficient cleanup of animation instances
+- **Battery Life**: Optimized for mobile device power consumption
 
 ## Risk Assessment
 
 ### Technical Risks
-- Performance with animations on mobile devices
+- **Performance with GSAP animations on mobile devices (HIGH PRIORITY)**
+- **Audio synchronization across different devices and browsers**
+- Animation complexity affecting bundle size
+- **Frame rate consistency during complex win sequences**
 - Database scaling for user data
 - Security for user authentication
 
@@ -163,7 +232,15 @@ A modern, engaging crypto-themed slot machine game that combines the excitement 
 - Competition from established gaming platforms
 
 ### Mitigation Strategies
-- Progressive enhancement for animations
+- **Animation Performance (CRITICAL)**: 
+  - Use GSAP's performance optimization techniques
+  - Implement animation LOD (Level of Detail) for lower-end devices
+  - Lazy loading for complex animations
+  - Pre-load critical animation assets
+  - Hardware acceleration for all reel animations
+- **Audio Performance**: Web Audio API with fallbacks, audio sprite optimization
+- **Frame Rate Monitoring**: Real-time FPS tracking with automatic quality adjustment
+- **Bundle Size Management**: Import only necessary GSAP modules, code splitting for animation-heavy components
 - Proper database indexing and caching
 - Regular security audits
 - Legal consultation for compliance
