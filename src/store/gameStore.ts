@@ -6,6 +6,7 @@ export interface GameState {
   lastWin: number
   reels: string[][]
   currentBet: number
+  winningLines: number[] // Track which lines won
 }
 
 export interface GameActions {
@@ -20,26 +21,45 @@ export interface GameStore extends GameState, GameActions {}
 // Crypto symbols for the slot machine
 const SYMBOLS = ['₿', 'Ξ', '◈', '🪙', '💎', '⚡', '🌟']
 
-// Simple win logic: 3 matching symbols
-const checkWin = (reels: string[][]): number => {
-  const line = [reels[0][1], reels[1][1], reels[2][1]] // Middle row
-  
-  if (line[0] === line[1] && line[1] === line[2]) {
-    // All three match - payout based on symbol
-    const symbol = line[0]
-    const payouts = {
-      '₿': 100,   // Bitcoin - highest payout
-      'Ξ': 80,    // Ethereum
-      '◈': 60,    // Diamond
-      '🪙': 40,   // Coin
-      '💎': 30,   // Gem
-      '⚡': 20,   // Lightning
-      '🌟': 15    // Star
-    }
-    return payouts[symbol as keyof typeof payouts] || 10
+// Enhanced win logic: 5 winning lines
+const checkWin = (reels: string[][]): { totalWin: number; winningLines: number[] } => {
+  const payouts = {
+    '₿': 100,   // Bitcoin - highest payout
+    'Ξ': 80,    // Ethereum
+    '◈': 60,    // Diamond
+    '🪙': 40,   // Coin
+    '💎': 30,   // Gem
+    '⚡': 20,   // Lightning
+    '🌟': 15    // Star
   }
-  
-  return 0 // No win
+
+  const lines = [
+    // Line 0: Top horizontal [0,0] [1,0] [2,0]
+    [reels[0][0], reels[1][0], reels[2][0]],
+    // Line 1: Middle horizontal [0,1] [1,1] [2,1]
+    [reels[0][1], reels[1][1], reels[2][1]],
+    // Line 2: Bottom horizontal [0,2] [1,2] [2,2]
+    [reels[0][2], reels[1][2], reels[2][2]],
+    // Line 3: Diagonal \ [0,0] [1,1] [2,2]
+    [reels[0][0], reels[1][1], reels[2][2]],
+    // Line 4: Diagonal / [0,2] [1,1] [2,0]
+    [reels[0][2], reels[1][1], reels[2][0]]
+  ]
+
+  let totalWin = 0
+  const winningLines: number[] = []
+
+  lines.forEach((line, lineIndex) => {
+    if (line[0] === line[1] && line[1] === line[2]) {
+      // All three symbols match
+      const symbol = line[0]
+      const payout = payouts[symbol as keyof typeof payouts] || 10
+      totalWin += payout
+      winningLines.push(lineIndex)
+    }
+  })
+
+  return { totalWin, winningLines }
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -53,6 +73,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     ['◈', '🌟', '₿']
   ],
   currentBet: 10,
+  winningLines: [],
 
   // Actions
   spin: () => {
@@ -63,7 +84,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ 
       balance: state.balance - state.currentBet,
       isSpinning: true,
-      lastWin: 0
+      lastWin: 0,
+      winningLines: []
     })
 
     // Simulate spinning delay
@@ -87,14 +109,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ]
       ]
 
-      const winAmount = checkWin(newReels)
+      const { totalWin, winningLines } = checkWin(newReels)
       const currentState = get()
 
       set({
         reels: newReels,
         isSpinning: false,
-        lastWin: winAmount,
-        balance: currentState.balance + winAmount
+        lastWin: totalWin,
+        winningLines,
+        balance: currentState.balance + totalWin
       })
     }, 2000) // 2 second spin duration
   },

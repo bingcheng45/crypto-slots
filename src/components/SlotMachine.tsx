@@ -39,12 +39,6 @@ const SlotMachine = () => {
         
         {/* Display Screen */}
         <div className="bg-black rounded-lg p-4 mb-6 border-2 border-yellow-400 shadow-inner">
-          <div className="text-center mb-2">
-            <div className="text-yellow-400 text-sm md:text-base font-mono">
-              BALANCE: ${balance}
-            </div>
-          </div>
-          
           {/* Canvas Container - Responsive */}
           <div className="relative w-full aspect-[4/3] bg-gray-900 rounded border border-gray-600 overflow-hidden">
             {isLoaded && <SlotCanvas />}
@@ -53,18 +47,6 @@ const SlotMachine = () => {
 
         {/* Game Controls */}
         <GameUI onSpin={handleSpin} />
-        
-        {/* Crypto Branding */}
-        <div className="text-center mt-4">
-          <div className="flex justify-center space-x-2 text-2xl">
-            <span>₿</span>
-            <span>Ξ</span>
-            <span>◈</span>
-          </div>
-          <div className="text-gray-400 text-xs mt-1">
-            POWERED BY BLOCKCHAIN TECHNOLOGY
-          </div>
-        </div>
       </div>
 
       {/* Glow Effect */}

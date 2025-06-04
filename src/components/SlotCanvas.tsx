@@ -6,7 +6,7 @@ import { useGameStore } from '@/store/gameStore'
 
 const SlotCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const { reels, isSpinning, lastWin } = useGameStore()
+  const { reels, isSpinning, lastWin, winningLines } = useGameStore()
   const animationRef = useRef<gsap.core.Timeline | null>(null)
 
   useEffect(() => {
@@ -35,6 +35,8 @@ const SlotCanvas = () => {
       
       const width = canvas.offsetWidth
       const height = canvas.offsetHeight
+      const reelWidth = width / 3
+      const symbolHeight = height / 3
       
       // Clear canvas
       ctx.clearRect(0, 0, width, height)
@@ -42,9 +44,54 @@ const SlotCanvas = () => {
       // Draw background
       ctx.fillStyle = '#1a1a1a'
       ctx.fillRect(0, 0, width, height)
+
+      // Draw winning line highlights BEFORE symbols
+      if (lastWin > 0 && winningLines.length > 0) {
+        const lineColors = [
+          'rgba(255, 215, 0, 0.3)',   // Gold - Top horizontal
+          'rgba(255, 255, 0, 0.3)',   // Yellow - Middle horizontal  
+          'rgba(255, 165, 0, 0.3)',   // Orange - Bottom horizontal
+          'rgba(0, 255, 255, 0.3)',   // Cyan - Diagonal \
+          'rgba(255, 0, 255, 0.3)'    // Magenta - Diagonal /
+        ]
+
+        winningLines.forEach((lineIndex) => {
+          ctx.fillStyle = lineColors[lineIndex]
+          
+          if (lineIndex === 0) {
+            // Top horizontal line
+            ctx.fillRect(5, 5, width - 10, symbolHeight - 10)
+          } else if (lineIndex === 1) {
+            // Middle horizontal line
+            ctx.fillRect(5, symbolHeight + 5, width - 10, symbolHeight - 10)
+          } else if (lineIndex === 2) {
+            // Bottom horizontal line
+            ctx.fillRect(5, symbolHeight * 2 + 5, width - 10, symbolHeight - 10)
+          } else if (lineIndex === 3) {
+            // Diagonal \ line - draw individual squares
+            for (let i = 0; i < 3; i++) {
+              ctx.fillRect(
+                i * reelWidth + 5, 
+                i * symbolHeight + 5, 
+                reelWidth - 10, 
+                symbolHeight - 10
+              )
+            }
+          } else if (lineIndex === 4) {
+            // Diagonal / line - draw individual squares
+            for (let i = 0; i < 3; i++) {
+              ctx.fillRect(
+                i * reelWidth + 5, 
+                (2 - i) * symbolHeight + 5, 
+                reelWidth - 10, 
+                symbolHeight - 10
+              )
+            }
+          }
+        })
+      }
       
       // Draw reel separators
-      const reelWidth = width / 3
       ctx.strokeStyle = '#fbbf24'
       ctx.lineWidth = 2
       
@@ -52,6 +99,14 @@ const SlotCanvas = () => {
         ctx.beginPath()
         ctx.moveTo(i * reelWidth, 0)
         ctx.lineTo(i * reelWidth, height)
+        ctx.stroke()
+      }
+
+      // Draw horizontal separators
+      for (let i = 1; i < 3; i++) {
+        ctx.beginPath()
+        ctx.moveTo(0, i * symbolHeight)
+        ctx.lineTo(width, i * symbolHeight)
         ctx.stroke()
       }
       
@@ -63,25 +118,22 @@ const SlotCanvas = () => {
       reels.forEach((reel, reelIndex) => {
         reel.forEach((symbol, symbolIndex) => {
           const x = (reelIndex + 0.5) * reelWidth
-          const y = (symbolIndex + 0.5) * (height / 3)
+          const y = (symbolIndex + 0.5) * symbolHeight
           
-          // Highlight winning line
-          if (lastWin > 0 && symbolIndex === 1) {
-            ctx.fillStyle = '#fbbf24'
-            ctx.fillRect(reelIndex * reelWidth + 5, y - height / 6 + 5, reelWidth - 10, height / 3 - 10)
-          }
+          // Draw symbol with white color (or black if on highlighted background)
+          const isOnWinningLine = winningLines.some(lineIndex => {
+            if (lineIndex === 0) return symbolIndex === 0 // Top row
+            if (lineIndex === 1) return symbolIndex === 1 // Middle row
+            if (lineIndex === 2) return symbolIndex === 2 // Bottom row
+            if (lineIndex === 3) return reelIndex === symbolIndex // Diagonal \
+            if (lineIndex === 4) return reelIndex === (2 - symbolIndex) // Diagonal /
+            return false
+          })
           
-          // Draw symbol
-          ctx.fillStyle = lastWin > 0 && symbolIndex === 1 ? '#000' : '#fff'
+          ctx.fillStyle = (lastWin > 0 && isOnWinningLine) ? '#000' : '#fff'
           ctx.fillText(symbol, x, y)
         })
       })
-      
-      // Draw win overlay
-      if (lastWin > 0) {
-        ctx.fillStyle = 'rgba(251, 191, 36, 0.3)'
-        ctx.fillRect(0, height / 3, width, height / 3)
-      }
     }
 
     // Spinning animation
@@ -155,7 +207,7 @@ const SlotCanvas = () => {
         animationRef.current.kill()
       }
     }
-  }, [reels, isSpinning, lastWin])
+  }, [reels, isSpinning, lastWin, winningLines])
 
   return (
     <canvas
