@@ -1,4 +1,4 @@
-# Product Requirements Document (PRD) - Crypto Slots
+ # Product Requirements Document (PRD) - Crypto Slots
 
 ## Project Overview
 
