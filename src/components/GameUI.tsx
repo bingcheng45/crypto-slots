@@ -1,173 +1,144 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
-import { gsap } from 'gsap'
 import { useGameStore } from '@/store/gameStore'
+import { useEffect } from 'react'
+import { gsap } from 'gsap'
 
-interface GameUIProps {
-  onSpin: () => void
-}
-
-const GameUI = ({ onSpin }: GameUIProps) => {
-  const spinButtonRef = useRef<HTMLButtonElement>(null)
-  const { balance, isSpinning, currentBet, lastWin, increaseBet, decreaseBet } = useGameStore()
+const GameUI = () => {
+  const { 
+    balance, 
+    currentBet, 
+    lastWin, 
+    isSpinning, 
+    spin, 
+    increaseBet, 
+    decreaseBet, 
+    addBalance 
+  } = useGameStore()
 
   useEffect(() => {
-    // Initialize button with hover animations
-    const button = spinButtonRef.current
-    if (!button) return
-
-    const handleMouseEnter = () => {
-      gsap.to(button, {
-        scale: 1.05,
-        duration: 0.2,
-        ease: "power2.out"
-      })
+    // Animate balance changes
+    if (lastWin > 0) {
+      gsap.fromTo('.win-amount', 
+        { scale: 1.2, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(1.7)" }
+      )
     }
+  }, [lastWin])
 
-    const handleMouseLeave = () => {
-      gsap.to(button, {
-        scale: 1,
-        duration: 0.2,
-        ease: "power2.out"
-      })
-    }
-
-    const handleMouseDown = () => {
-      gsap.to(button, {
-        scale: 0.95,
-        duration: 0.1,
-        ease: "power2.out"
-      })
-    }
-
-    const handleMouseUp = () => {
-      gsap.to(button, {
-        scale: 1.05,
-        duration: 0.1,
-        ease: "power2.out"
-      })
-    }
-
-    button.addEventListener('mouseenter', handleMouseEnter)
-    button.addEventListener('mouseleave', handleMouseLeave)
-    button.addEventListener('mousedown', handleMouseDown)
-    button.addEventListener('mouseup', handleMouseUp)
-
-    return () => {
-      button.removeEventListener('mouseenter', handleMouseEnter)
-      button.removeEventListener('mouseleave', handleMouseLeave)
-      button.removeEventListener('mousedown', handleMouseDown)
-      button.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [])
-
-  const handleSpinClick = () => {
+  const handleSpin = () => {
     if (!isSpinning && balance >= currentBet) {
       // Button press animation
-      gsap.to(spinButtonRef.current, {
-        scale: 0.9,
-        duration: 0.05,
+      gsap.to('.spin-button', {
+        scale: 0.95,
+        duration: 0.1,
         yoyo: true,
         repeat: 1,
         ease: "power2.inOut"
       })
-      
-      onSpin()
+      spin()
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return `$${amount.toFixed(2)}`
+  const handleBetIncrease = () => {
+    if (!isSpinning) {
+      gsap.to('.bet-button', {
+        scale: 0.9,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1
+      })
+      increaseBet()
+    }
+  }
+
+  const handleBetDecrease = () => {
+    if (!isSpinning) {
+      gsap.to('.bet-button', {
+        scale: 0.9,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1
+      })
+      decreaseBet()
+    }
+  }
+
+  const handleAddCredits = () => {
+    gsap.to('.add-credits-button', {
+      scale: 0.9,
+      duration: 0.1,
+      yoyo: true,
+      repeat: 1
+    })
+    addBalance(10.00)
   }
 
   return (
-    <div className="space-y-3">
-      {/* Single Line: Balance | Bet Controls | Last Win */}
-      <div className="bg-gray-800 rounded-lg p-3 border border-gray-600">
-        <div className="flex items-center justify-between text-xs">
-          {/* Balance */}
-          <div className="text-center flex-1">
-            <div className="text-gray-400 uppercase tracking-wide">Balance</div>
-            <div className="text-green-400 font-mono font-bold">{formatCurrency(balance)}</div>
-          </div>
-          
-          {/* Bet Controls - Center */}
-          <div className="flex items-center space-x-2 flex-1 justify-center">
-            <button
-              onClick={decreaseBet}
-              disabled={isSpinning || currentBet <= 0.01}
-              className={`
-                w-7 h-7 rounded-full font-bold text-sm transition-all duration-200
-                ${isSpinning || currentBet <= 0.01
-                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                  : 'bg-red-600 hover:bg-red-500 text-white hover:scale-110 active:scale-95'
-                }
-              `}
-            >
-              −
-            </button>
-            
-            <div className="bg-black rounded px-3 py-1 border border-yellow-400">
-              <div className="text-yellow-400 font-mono text-sm font-bold">
-                {formatCurrency(currentBet)}
-              </div>
-            </div>
-            
-            <button
-              onClick={increaseBet}
-              disabled={isSpinning}
-              className={`
-                w-7 h-7 rounded-full font-bold text-sm transition-all duration-200
-                ${isSpinning
-                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                  : 'bg-green-600 hover:bg-green-500 text-white hover:scale-110 active:scale-95'
-                }
-              `}
-            >
-              +
-            </button>
-          </div>
-          
-          {/* Last Win */}
-          <div className="text-center flex-1">
-            <div className="text-gray-400 uppercase tracking-wide">Last Win</div>
-            <div className={`font-mono font-bold ${lastWin > 0 ? 'text-green-400' : 'text-gray-500'}`}>
-              {formatCurrency(lastWin)}
-            </div>
-          </div>
+    <div className="bg-gray-900 text-white p-4 space-y-4">
+      {/* Balance, Bet, Win Info */}
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="bg-gray-700 p-3 rounded-lg text-center">
+          <div className="text-xs text-gray-400 mb-1">BALANCE</div>
+          <div className="text-lg font-bold text-green-400">${balance.toFixed(2)}</div>
+        </div>
+        <div className="bg-gray-700 p-3 rounded-lg text-center">
+          <div className="text-xs text-gray-400 mb-1">BET</div>
+          <div className="text-lg font-bold text-yellow-400">${currentBet.toFixed(2)}</div>
+        </div>
+        <div className="bg-gray-700 p-3 rounded-lg text-center">
+          <div className="text-xs text-gray-400 mb-1">WIN</div>
+          <div className="text-lg font-bold text-blue-400 win-amount">${lastWin.toFixed(2)}</div>
         </div>
       </div>
 
-      {/* Compact Spin Button */}
-      <button
-        ref={spinButtonRef}
-        onClick={handleSpinClick}
-        disabled={isSpinning || balance < currentBet}
-        className={`
-          w-full py-3 text-lg font-bold rounded-lg transition-all duration-200
-          ${isSpinning || balance < currentBet
-            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-            : 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg hover:shadow-xl'
-          }
-        `}
-      >
-        {isSpinning ? (
-          <div className="flex items-center justify-center space-x-2">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            <span>SPINNING...</span>
-          </div>
-        ) : (
-          'SPIN'
-        )}
-      </button>
+      {/* Winning Combination Display */}
+      {/* Bet Controls */}
+      <div className="flex items-center justify-center space-x-4">
+        <button
+          onClick={handleBetDecrease}
+          disabled={isSpinning || currentBet <= 1.00}
+          className="bet-button bg-red-600 hover:bg-red-700 disabled:bg-gray-600 px-4 py-2 rounded-lg font-bold transition-colors"
+        >
+          BET -
+        </button>
+        
+        <button
+          onClick={handleSpin}
+          disabled={isSpinning || balance < currentBet}
+          className="spin-button bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 disabled:from-gray-600 disabled:to-gray-700 px-8 py-3 rounded-lg font-bold text-xl transition-colors shadow-lg"
+        >
+          {isSpinning ? 'SPINNING...' : 'SPIN'}
+        </button>
+        
+        <button
+          onClick={handleBetIncrease}
+          disabled={isSpinning}
+          className="bet-button bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-4 py-2 rounded-lg font-bold transition-colors"
+        >
+          BET +
+        </button>
+      </div>
 
-      {/* Compact Warning */}
-      {balance < currentBet && (
-        <div className="text-center text-red-400 text-xs bg-red-900/20 border border-red-600 rounded p-2">
-          Insufficient balance!
+      {/* Add Credits Button */}
+      <div className="text-center">
+        <button
+          onClick={handleAddCredits}
+          className="add-credits-button bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-bold transition-colors"
+        >
+          Add $10 Credits
+        </button>
+      </div>
+
+      {/* Game Info */}
+      <div className="bg-gray-800 p-3 rounded-lg text-center text-sm text-gray-400">
+        <div className="mb-2">
+          <strong>Symbols:</strong> 1 (Single) 2 (Double) 3 (Triple) ★ (Jackpot) · (Blank)
         </div>
-      )}
+        <div>
+          <strong>Payline:</strong> Middle row only • <strong>Max Bet:</strong> $10.00
+        </div>
+      </div>
     </div>
   )
 }
