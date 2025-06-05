@@ -28,13 +28,15 @@ const GameUI = () => {
 
   const handleSpin = () => {
     if (!isSpinning && balance >= currentBet) {
-      // Button press animation
+      // Button press animation (completely isolated)
+      gsap.set('.spin-button', { transformOrigin: "center center" })
       gsap.to('.spin-button', {
         scale: 0.95,
         duration: 0.1,
         yoyo: true,
         repeat: 1,
-        ease: "power2.inOut"
+        ease: "power2.inOut",
+        force3D: true
       })
       spin()
     }
@@ -84,11 +86,11 @@ const GameUI = () => {
         </div>
         <div className="bg-gray-700 p-3 rounded-lg text-center">
           <div className="text-xs text-gray-400 mb-1">BET</div>
-          <div className="text-lg font-bold text-yellow-400">${currentBet.toFixed(2)}</div>
+          <div className="text-lg font-bold text-blue-400">${currentBet.toFixed(2)}</div>
         </div>
         <div className="bg-gray-700 p-3 rounded-lg text-center">
           <div className="text-xs text-gray-400 mb-1">WIN</div>
-          <div className="text-lg font-bold text-blue-400 win-amount">${lastWin.toFixed(2)}</div>
+          <div className="text-lg font-bold text-yellow-400 win-amount">${lastWin.toFixed(2)}</div>
         </div>
       </div>
 
@@ -106,7 +108,7 @@ const GameUI = () => {
         <button
           onClick={handleSpin}
           disabled={isSpinning || balance < currentBet}
-          className="spin-button bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 disabled:from-gray-600 disabled:to-gray-700 px-8 py-3 rounded-lg font-bold text-xl transition-colors shadow-lg"
+          className="spin-button bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 disabled:from-gray-600 disabled:to-gray-700 px-8 py-3 rounded-lg font-bold text-xl transition-colors shadow-lg transform-gpu will-change-transform"
         >
           {isSpinning ? 'SPINNING...' : 'SPIN'}
         </button>
@@ -133,7 +135,7 @@ const GameUI = () => {
       {/* Game Info */}
       <div className="bg-gray-800 p-3 rounded-lg text-center text-sm text-gray-400">
         <div className="mb-2">
-          <strong>Symbols:</strong> 1 (Single) 2 (Double) 3 (Triple) ★ (Jackpot) · (Blank)
+          <strong>Symbols:</strong> 1 (Single) 2 (Double) 3 (Triple) 7 (Jackpot) · (Blank)
         </div>
         <div>
           <strong>Payline:</strong> Middle row only • <strong>Max Bet:</strong> $10.00

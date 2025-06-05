@@ -140,3 +140,4 @@ This is a demo application for educational purposes. Please gamble responsibly i
 ---
 
 **Built with ❤️ using the smoothest web animations possible**
+ 

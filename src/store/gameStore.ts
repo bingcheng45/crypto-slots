@@ -19,19 +19,20 @@ export interface GameActions {
 
 export interface GameStore extends GameState, GameActions {}
 
-// Slot machine symbols
+// Black Gold Slot Machine symbols
 const SYMBOLS = {
-  SINGLE_BAR: '1',
-  DOUBLE_BAR: '2', 
-  TRIPLE_BAR: '3',
-  JACKPOT: 'J',     // Black Gold
-  BLANK: 'B'
+  SINGLE_BAR: '1C',    // Single Bar
+  DOUBLE_BAR: '2C',    // Double Bar  
+  TRIPLE_BAR: '3C',    // Triple Bar
+  BLACK_GOLD: 'BG',    // Black Gold (Wild)
+  CHERRY: 'CH',        // Cherry (Scatter)
+  BLANK: '--'          // Blank
 }
 
-// Bet increment levels (min $1, max $10)
-const BET_LEVELS = [1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00]
+// Bet levels - from $0.01 to $100.00 (modified from original specs for better UX)
+const BET_LEVELS = [0.01, 0.05, 0.10, 0.25, 0.50, 1.00, 2.00, 5.00, 10.00, 25.00, 50.00, 75.00, 100.00]
 
-// Reel strips - 72 positions each with exact distributions
+// Reel strips - 72 positions each with exact distributions per specs
 const REEL_STRIPS = {
   reel1: [
     // 16 Single Bars
@@ -40,10 +41,12 @@ const REEL_STRIPS = {
     ...Array(13).fill(SYMBOLS.DOUBLE_BAR),
     // 6 Triple Bars
     ...Array(6).fill(SYMBOLS.TRIPLE_BAR),
-    // 1 Jackpot
-    SYMBOLS.JACKPOT,
-    // 36 Blanks
-    ...Array(36).fill(SYMBOLS.BLANK)
+    // 1 Black Gold
+    SYMBOLS.BLACK_GOLD,
+    // 1 Cherry
+    SYMBOLS.CHERRY,
+    // 35 Blanks
+    ...Array(35).fill(SYMBOLS.BLANK)
   ],
   reel2: [
     // 18 Single Bars
@@ -52,10 +55,12 @@ const REEL_STRIPS = {
     ...Array(7).fill(SYMBOLS.DOUBLE_BAR),
     // 4 Triple Bars
     ...Array(4).fill(SYMBOLS.TRIPLE_BAR),
-    // 1 Jackpot
-    SYMBOLS.JACKPOT,
-    // 42 Blanks
-    ...Array(42).fill(SYMBOLS.BLANK)
+    // 1 Black Gold
+    SYMBOLS.BLACK_GOLD,
+    // 1 Cherry
+    SYMBOLS.CHERRY,
+    // 41 Blanks
+    ...Array(41).fill(SYMBOLS.BLANK)
   ],
   reel3: [
     // 20 Single Bars
@@ -64,10 +69,12 @@ const REEL_STRIPS = {
     ...Array(4).fill(SYMBOLS.DOUBLE_BAR),
     // 3 Triple Bars
     ...Array(3).fill(SYMBOLS.TRIPLE_BAR),
-    // 1 Jackpot
-    SYMBOLS.JACKPOT,
-    // 44 Blanks
-    ...Array(44).fill(SYMBOLS.BLANK)
+    // 1 Black Gold
+    SYMBOLS.BLACK_GOLD,
+    // 1 Cherry
+    SYMBOLS.CHERRY,
+    // 43 Blanks
+    ...Array(43).fill(SYMBOLS.BLANK)
   ]
 }
 
@@ -88,57 +95,55 @@ const SHUFFLED_REELS = {
   reel3: shuffleArray(REEL_STRIPS.reel3)
 }
 
-// Payout table for 1-coin bets (multiplied by actual bet amount)
+// Complete Black Gold 1-Coin Payout Table (exact from specifications)
 const PAYOUT_TABLE = [
-  // Jackpot combinations
-  { pattern: ['J', 'J', 'J'], payout: 4000, name: 'JACKPOT' },
+  // Premium Combination
+  { pattern: ['BG', 'BG', 'BG'], payout: 4000, name: 'BLACK GOLD JACKPOT' },
   
-  // Triple Bar combinations
-  { pattern: ['3', '3', '3'], payout: 114.5, name: 'THREE TRIPLE BARS' },
-  { pattern: ['3', 'J', 'J'], payout: 120, name: 'TRIPLE BAR + 2 JACKPOTS' },
-  { pattern: ['J', '3', 'J'], payout: 120, name: 'JACKPOT + TRIPLE BAR + JACKPOT' },
-  { pattern: ['J', 'J', '3'], payout: 120, name: '2 JACKPOTS + TRIPLE BAR' },
-  { pattern: ['3', '3', 'J'], payout: 117, name: 'TWO TRIPLE BARS + JACKPOT' },
-  { pattern: ['3', 'J', '3'], payout: 117, name: 'TRIPLE BAR + JACKPOT + TRIPLE BAR' },
-  { pattern: ['J', '3', '3'], payout: 117, name: 'JACKPOT + TWO TRIPLE BARS' },
+  // Triple Bar Combinations
+  { pattern: ['3C', '3C', '3C'], payout: 1148.5, name: 'THREE TRIPLE BARS' },
+  { pattern: ['3C', 'BG', 'BG'], payout: 120, name: 'TRIPLE BAR + 2 BLACK GOLD' },
+  { pattern: ['BG', '3C', 'BG'], payout: 120, name: 'BLACK GOLD + TRIPLE BAR + BLACK GOLD' },
+  { pattern: ['BG', 'BG', '3C'], payout: 120, name: '2 BLACK GOLD + TRIPLE BAR' },
+  { pattern: ['3C', '3C', 'BG'], payout: 117, name: 'TWO TRIPLE BARS + BLACK GOLD' },
+  { pattern: ['3C', 'BG', '3C'], payout: 117, name: 'TRIPLE BAR + BLACK GOLD + TRIPLE BAR' },
+  { pattern: ['BG', '3C', '3C'], payout: 117, name: 'BLACK GOLD + TWO TRIPLE BARS' },
   
-  // Double Bar combinations
-  { pattern: ['2', '2', '2'], payout: 100, name: 'THREE DOUBLE BARS' },
-  { pattern: ['2', 'J', 'J'], payout: 105, name: 'DOUBLE BAR + 2 JACKPOTS' },
-  { pattern: ['J', '2', 'J'], payout: 105, name: 'JACKPOT + DOUBLE BAR + JACKPOT' },
-  { pattern: ['J', 'J', '2'], payout: 105, name: '2 JACKPOTS + DOUBLE BAR' },
-  { pattern: ['2', '2', 'J'], payout: 102, name: 'TWO DOUBLE BARS + JACKPOT' },
-  { pattern: ['2', 'J', '2'], payout: 102, name: 'DOUBLE BAR + JACKPOT + DOUBLE BAR' },
-  { pattern: ['J', '2', '2'], payout: 102, name: 'JACKPOT + TWO DOUBLE BARS' },
+  // Double Bar Combinations
+  { pattern: ['2C', '2C', '2C'], payout: 100, name: 'THREE DOUBLE BARS' },
+  { pattern: ['2C', 'BG', 'BG'], payout: 105, name: 'DOUBLE BAR + 2 BLACK GOLD' },
+  { pattern: ['BG', '2C', 'BG'], payout: 105, name: 'BLACK GOLD + DOUBLE BAR + BLACK GOLD' },
+  { pattern: ['BG', 'BG', '2C'], payout: 105, name: '2 BLACK GOLD + DOUBLE BAR' },
+  { pattern: ['2C', '2C', 'BG'], payout: 102, name: 'TWO DOUBLE BARS + BLACK GOLD' },
+  { pattern: ['2C', 'BG', '2C'], payout: 102, name: 'DOUBLE BAR + BLACK GOLD + DOUBLE BAR' },
+  { pattern: ['BG', '2C', '2C'], payout: 102, name: 'BLACK GOLD + TWO DOUBLE BARS' },
   
-  // Single Bar combinations
-  { pattern: ['1', '1', '1'], payout: 20, name: 'THREE SINGLE BARS' },
-  { pattern: ['1', 'J', 'J'], payout: 25, name: 'SINGLE BAR + 2 JACKPOTS' },
-  { pattern: ['J', '1', 'J'], payout: 25, name: 'JACKPOT + SINGLE BAR + JACKPOT' },
-  { pattern: ['J', 'J', '1'], payout: 25, name: '2 JACKPOTS + SINGLE BAR' },
-  { pattern: ['1', '1', 'J'], payout: 22, name: 'TWO SINGLE BARS + JACKPOT' },
-  { pattern: ['1', 'J', '1'], payout: 22, name: 'SINGLE BAR + JACKPOT + SINGLE BAR' },
-  { pattern: ['J', '1', '1'], payout: 22, name: 'JACKPOT + TWO SINGLE BARS' },
+  // Single Bar Combinations
+  { pattern: ['1C', '1C', '1C'], payout: 202.5, name: 'THREE SINGLE BARS' },
+  { pattern: ['1C', 'BG', 'BG'], payout: 25, name: 'SINGLE BAR + 2 BLACK GOLD' },
+  { pattern: ['BG', '1C', 'BG'], payout: 25, name: 'BLACK GOLD + SINGLE BAR + BLACK GOLD' },
+  { pattern: ['BG', 'BG', '1C'], payout: 25, name: '2 BLACK GOLD + SINGLE BAR' },
+  { pattern: ['1C', '1C', 'BG'], payout: 22, name: 'TWO SINGLE BARS + BLACK GOLD' },
+  { pattern: ['1C', 'BG', '1C'], payout: 22, name: 'SINGLE BAR + BLACK GOLD + SINGLE BAR' },
+  { pattern: ['BG', '1C', '1C'], payout: 22, name: 'BLACK GOLD + TWO SINGLE BARS' },
   
-  // Mixed bars (XC XC XC) - any combination of different bars
-  { pattern: ['mixed_bars'], payout: 5, name: 'THREE MIXED BARS' },
-  { pattern: ['mixed_bar', 'mixed_bar', 'J'], payout: 7, name: 'TWO MIXED BARS + JACKPOT' },
-  { pattern: ['mixed_bar', 'J', 'mixed_bar'], payout: 7, name: 'MIXED BAR + JACKPOT + MIXED BAR' },
-  { pattern: ['J', 'mixed_bar', 'mixed_bar'], payout: 7, name: 'JACKPOT + TWO MIXED BARS' },
+  // Mixed Bar Combinations (XC = any bar symbol)
+  { pattern: ['mixed_bars_three'], payout: 51, name: 'THREE MIXED BARS' },
+  { pattern: ['mixed_bar', 'mixed_bar', 'BG'], payout: 70.5, name: 'TWO MIXED BARS + BLACK GOLD' },
+  { pattern: ['mixed_bar', 'BG', 'mixed_bar'], payout: 74.5, name: 'MIXED BAR + BLACK GOLD + MIXED BAR' },
+  { pattern: ['BG', 'mixed_bar', 'mixed_bar'], payout: 73.5, name: 'BLACK GOLD + TWO MIXED BARS' },
   
-  // Jackpot + Blank combinations
-  { pattern: ['J', 'J', 'B'], payout: 5, name: '2 JACKPOTS + BLANK' },
-  { pattern: ['B', 'J', 'J'], payout: 5, name: 'BLANK + 2 JACKPOTS' },
-  { pattern: ['J', 'B', 'J'], payout: 5, name: 'JACKPOT + BLANK + JACKPOT' },
-  
-  // Single Jackpot + Blanks
-  { pattern: ['J', 'B', 'B'], payout: 2, name: 'JACKPOT + 2 BLANKS' },
-  { pattern: ['B', 'B', 'J'], payout: 2, name: '2 BLANKS + JACKPOT' },
-  { pattern: ['B', 'J', 'B'], payout: 2, name: 'BLANK + JACKPOT + BLANK' }
+  // Black Gold Scatter Pays
+  { pattern: ['BG', 'BG', '--'], payout: 52, name: '2 BLACK GOLD + BLANK' },
+  { pattern: ['--', 'BG', 'BG'], payout: 51.5, name: 'BLANK + 2 BLACK GOLD' },
+  { pattern: ['BG', '--', 'BG'], payout: 52, name: 'BLACK GOLD + BLANK + BLACK GOLD' },
+  { pattern: ['BG', '--', '--'], payout: 20.5, name: 'BLACK GOLD + 2 BLANKS' },
+  { pattern: ['--', '--', 'BG'], payout: 20.75, name: '2 BLANKS + BLACK GOLD' },
+  { pattern: ['--', 'BG', '--'], payout: 20.5, name: 'BLANK + BLACK GOLD + BLANK' }
 ]
 
-// Check if symbol is a bar (1, 2, or 3)
-const isBar = (symbol: string) => ['1', '2', '3'].includes(symbol)
+// Check if symbol is a bar (1C, 2C, or 3C)
+const isBar = (symbol: string) => ['1C', '2C', '3C'].includes(symbol)
 
 // Check if three symbols are mixed bars (all bars but not all the same)
 const isMixedBars = (symbol1: string, symbol2: string, symbol3: string) => {
@@ -146,26 +151,50 @@ const isMixedBars = (symbol1: string, symbol2: string, symbol3: string) => {
          !(symbol1 === symbol2 && symbol2 === symbol3)
 }
 
+// Count cherries anywhere on the reels (scatter pay)
+const countCherries = (reels: string[][]) => {
+  let cherryCount = 0
+  reels.forEach(reel => {
+    reel.forEach(symbol => {
+      if (symbol === 'CH') cherryCount++
+    })
+  })
+  return cherryCount
+}
+
 // Enhanced win logic with exact payout table
 const checkWin = (reels: string[][]): { totalWin: number; winningCombination: string | null } => {
   const line = [reels[0][1], reels[1][1], reels[2][1]] // Middle line only
+  let totalWin = 0
+  let winningCombination = null
   
-  // Check exact pattern matches first (highest priority)
+  // First check for Cherry scatter pays (pays regardless of line)
+  const cherryCount = countCherries(reels)
+  if (cherryCount > 0) {
+    const cherryPay = cherryCount // 1 cherry = 1, 2 cherries = 2, 3 cherries = 3
+    totalWin += cherryPay
+    winningCombination = `${cherryCount} CHERR${cherryCount > 1 ? 'IES' : 'Y'}`
+  }
+  
+  // Then check line combinations (highest priority wins)
   for (const combo of PAYOUT_TABLE) {
-    if (combo.pattern[0] === 'mixed_bars') {
+    if (combo.pattern[0] === 'mixed_bars_three') {
       // Handle mixed bars (XC XC XC) - any combination of different bars
       if (isMixedBars(line[0], line[1], line[2])) {
-        return { totalWin: combo.payout, winningCombination: combo.name }
+        if (combo.payout > totalWin) {
+          totalWin = combo.payout
+          winningCombination = combo.name
+        }
       }
     } else if (combo.pattern.includes('mixed_bar')) {
-      // Handle mixed bar + jackpot combinations
+      // Handle mixed bar + Black Gold combinations
       const isMatch = combo.pattern.every((expected, index) => {
         if (expected === 'mixed_bar') {
           return isBar(line[index])
-        } else if (expected === 'J') {
-          return line[index] === 'J'
-        } else if (expected === 'B') {
-          return line[index] === 'B'
+        } else if (expected === 'BG') {
+          return line[index] === 'BG'
+        } else if (expected === '--') {
+          return line[index] === '--'
         }
         return line[index] === expected
       })
@@ -176,21 +205,27 @@ const checkWin = (reels: string[][]): { totalWin: number; winningCombination: st
         if (barPositions.length >= 2) {
           const barSymbols = barPositions.map(i => line[i])
           const allSame = barSymbols.every(symbol => symbol === barSymbols[0])
-          if (allSame) return { totalWin: 0, winningCombination: null } // Skip if all bars are same
+          if (allSame) continue // Skip if all bars are same
         }
-        return { totalWin: combo.payout, winningCombination: combo.name }
+        if (combo.payout > totalWin) {
+          totalWin = combo.payout
+          winningCombination = combo.name
+        }
       }
     } else {
       // Handle exact pattern matches
       const isMatch = combo.pattern.every((expected, index) => line[index] === expected)
       
       if (isMatch) {
-        return { totalWin: combo.payout, winningCombination: combo.name }
+        if (combo.payout > totalWin) {
+          totalWin = combo.payout
+          winningCombination = combo.name
+        }
       }
     }
   }
   
-  return { totalWin: 0, winningCombination: null }
+  return { totalWin, winningCombination }
 }
 
 // Generate random reel result
@@ -219,11 +254,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   isSpinning: false,
   lastWin: 0,
   reels: [
-    ['B', '1', 'B'],  // Keep 3 symbols for animation but only show middle
-    ['B', '2', 'B'],  // Keep 3 symbols for animation but only show middle
-    ['B', '3', 'B']   // Keep 3 symbols for animation but only show middle
+    ['--', '1C', '--'],  // Keep 3 symbols for animation but only show middle
+    ['--', '2C', '--'],  // Keep 3 symbols for animation but only show middle
+    ['--', '3C', '--']   // Keep 3 symbols for animation but only show middle
   ],
-  currentBet: 1.00, // Default to $1 bet (minimum bet)
+  currentBet: 1.00, // Default to $1 bet
   winningCombination: null,
 
   // Actions
@@ -239,7 +274,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       winningCombination: null
     })
 
-    // Simulate spinning delay (no animation for now)
+    // Simulate spinning delay
     setTimeout(() => {
       // Generate new random reels using proper reel strips
       const newReels = generateReelResult()
@@ -257,7 +292,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         winningCombination,
         balance: Math.round((currentState.balance + actualWin) * 100) / 100
       })
-    }, 1000) // Shortened to 1 second since no animation
+    }, 1000)
   },
 
   increaseBet: () => {
