@@ -31,16 +31,23 @@ const SlotMachine = () => {
   return (
     <div 
       ref={containerRef}
-      className="max-w-md mx-auto bg-gray-800 rounded-xl shadow-2xl overflow-hidden contain-layout"
-      style={{ contain: 'layout style' }}
+      className="max-w-md mx-auto rounded-xl shadow-2xl overflow-hidden contain-layout backdrop-blur-md border border-white/10"
+      style={{ 
+        contain: 'layout style',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05)'
+      }}
     >
       {/* Slot Display */}
-      <div className="relative bg-gray-700 p-4 flex justify-center">
+      <div className="relative p-4 flex justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
         <div 
-          className="bg-black rounded-lg overflow-hidden border-2 border-gray-600 w-full max-w-sm"
+          className="rounded-lg overflow-hidden border w-full max-w-sm backdrop-blur-sm"
           style={{ 
             height: '128px',
-            aspectRatio: '3/1'
+            aspectRatio: '3/1',
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)'
           }}
         >
           <SlotCanvas />

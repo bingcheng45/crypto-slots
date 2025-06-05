@@ -37,11 +37,11 @@ const SlotCanvas = () => {
       // Clear canvas
       ctx.clearRect(0, 0, width, height)
       
-      // Draw background with gradient (Black Gold theme)
+      // Draw background with dark glass effect
       const gradient = ctx.createLinearGradient(0, 0, 0, height)
-      gradient.addColorStop(0, '#1a1a1a')
-      gradient.addColorStop(0.5, '#2d2d2d')
-      gradient.addColorStop(1, '#0f0f0f')
+      gradient.addColorStop(0, 'rgba(0, 0, 0, 0.3)')
+      gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.2)')
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0.4)')
       ctx.fillStyle = gradient
       ctx.fillRect(0, 0, width, height)
 
@@ -106,10 +106,16 @@ const SlotCanvas = () => {
         ctx.roundRect(x, y, w, h, 8)
         ctx.fill()
         
-        // Inner shadow effect with black border
-        ctx.strokeStyle = '#000000'
-        ctx.lineWidth = 3
+        // Glass border effect
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
+        ctx.lineWidth = 1
         ctx.roundRect(x, y, w, h, 8)
+        ctx.stroke()
+        
+        // Inner glass highlight
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
+        ctx.lineWidth = 0.5
+        ctx.roundRect(x + 1, y + 1, w - 2, h - 2, 7)
         ctx.stroke()
       }
       
@@ -151,11 +157,7 @@ const SlotCanvas = () => {
             color = '#DC143C' // Red
             shadowColor = '#8B0000'
             break
-          case 'CH':
-            symbolText = '🍒' // Cherry emoji
-            color = '#DC143C' // Crimson
-            shadowColor = '#8B0000'
-            break
+
           case '--':
             symbolText = '■' // Small square dot
             color = '#000000' // Black
