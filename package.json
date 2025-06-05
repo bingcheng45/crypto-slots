@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:rtp": "node test-rtp.js",
+    "test:display": "node test-display-reels.js",
+    "test:scenarios": "node test-scenarios.js",
+    "test:all": "npm run test:rtp && npm run test:display && npm run test:scenarios"
   },
   "dependencies": {
     "@types/howler": "^2.2.12",

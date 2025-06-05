@@ -4,9 +4,16 @@ export interface GameState {
   balance: number
   isSpinning: boolean
   lastWin: number
-  reels: string[][]
+  reels: string[][]  // Backend reels (72 symbols each) - for math calculations
+  displayReels: string[][]  // Frontend reels (32 symbols each) - for visual display
   currentBet: number
   winningCombination: string | null
+  animationState: {
+    isReelSpinning: boolean[]  // [reel1, reel2, reel3]
+    currentPositions: number[] // Current display positions for animation
+    targetPositions: number[]  // Where each reel should stop
+    spinSpeeds: number[]       // Animation speeds for each reel
+  }
 }
 
 export interface GameActions {
@@ -15,6 +22,7 @@ export interface GameActions {
   decreaseBet: () => void
   addBalance: (amount: number) => void
   setSpinning: (spinning: boolean) => void
+  findTargetPosition: (backendSymbol: string, displayReel: string[]) => number
 }
 
 export interface GameStore extends GameState, GameActions {}
@@ -105,6 +113,160 @@ const shuffleArray = (array: string[]) => {
     ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
   }
   return shuffled
+}
+
+// Generate display reel (32 symbols) for smooth animation
+const generateDisplayReel = (): string[] => {
+  // Start fresh with completely new approach
+  let attempts = 0
+  const maxAttempts = 10
+  
+  while (attempts < maxAttempts) {
+    attempts++
+    const reel: string[] = new Array(32).fill('')
+    
+    // Step 1: Place 5 blank symbols ensuring no adjacency
+    const blankPositions: number[] = []
+    while (blankPositions.length < 5) {
+      const pos = Math.floor(Math.random() * 32)
+      // Check if position is valid (not adjacent to existing blanks)
+      const isValid = blankPositions.every(existingPos => 
+        Math.abs(pos - existingPos) > 1 && Math.abs(pos - existingPos) !== 31 // Handle wrap-around
+      )
+      if (isValid && !blankPositions.includes(pos)) {
+        blankPositions.push(pos)
+      }
+    }
+    
+    // Place blanks in reel
+    blankPositions.forEach(pos => {
+      reel[pos] = '--'
+    })
+    
+    // Step 2: Find positions above blanks for strategic placement
+    const positionsAboveBlanks = blankPositions.map(blankPos => (blankPos - 1 + 32) % 32)
+    
+    // Remove duplicates and positions that are already blanks
+    const validAboveBlanks = [...new Set(positionsAboveBlanks)].filter(pos => reel[pos] === '')
+    
+    // Step 3: Strategic jackpot placement - prioritize positions above blanks
+    const strategicJackpots = Math.min(validAboveBlanks.length, 2) // Try to place up to 2
+    const strategicPositions: number[] = []
+    
+    for (let i = 0; i < strategicJackpots; i++) {
+      reel[validAboveBlanks[i]] = 'BG'
+      strategicPositions.push(validAboveBlanks[i])
+    }
+    
+    // Step 4: Get all remaining available positions
+    const availablePositions: number[] = []
+    for (let i = 0; i < 32; i++) {
+      if (reel[i] === '') {
+        availablePositions.push(i)
+      }
+    }
+    
+    // Step 5: Place remaining required symbols
+    const requiredSymbols = ['1C', '2C', '3C']
+    
+    // Add remaining BG symbols if needed
+    const totalBGNeeded = 3
+    const remainingBG = totalBGNeeded - strategicJackpots
+    for (let i = 0; i < remainingBG; i++) {
+      requiredSymbols.push('BG')
+    }
+    
+         // Shuffle available positions and place required symbols
+     const tempPositions = [...availablePositions]
+     const shuffledPositions: number[] = []
+     while (tempPositions.length > 0) {
+       const randomIndex = Math.floor(Math.random() * tempPositions.length)
+       shuffledPositions.push(tempPositions.splice(randomIndex, 1)[0])
+     }
+     
+     for (let i = 0; i < requiredSymbols.length && i < shuffledPositions.length; i++) {
+       const position = shuffledPositions[i]
+       reel[position] = requiredSymbols[i]
+     }
+    
+    // Step 6: Fill remaining positions with duplicates
+    const remainingPositions: number[] = []
+    for (let i = 0; i < 32; i++) {
+      if (reel[i] === '') {
+        remainingPositions.push(i)
+      }
+    }
+    
+    // Create duplicate pool
+    const duplicateSymbols = [
+      ...Array(10).fill('1C'), // Most common
+      ...Array(7).fill('2C'),  // Medium
+      ...Array(4).fill('3C'),  // Less common
+    ]
+    
+    // Adjust for any remaining BG slots
+    const currentBGCount = reel.filter(symbol => symbol === 'BG').length
+    if (currentBGCount < 3) {
+      for (let i = currentBGCount; i < 3; i++) {
+        duplicateSymbols.push('BG')
+      }
+    }
+    
+    // Shuffle and fill remaining positions
+    const shuffledDuplicates = shuffleArray(duplicateSymbols)
+    
+    for (let i = 0; i < remainingPositions.length && i < shuffledDuplicates.length; i++) {
+      reel[remainingPositions[i]] = shuffledDuplicates[i]
+    }
+    
+    // Validate the reel has all required symbols
+    const requiredTypes = ['1C', '2C', '3C', 'BG']
+    const hasAllRequired = requiredTypes.every(symbol => reel.includes(symbol))
+    
+    if (hasAllRequired) {
+      return reel
+    }
+  }
+  
+  // Fallback: if we couldn't create a good strategic reel, return a basic valid one
+  return generateBasicReel()
+}
+
+// Fallback function for basic reel generation
+const generateBasicReel = (): string[] => {
+  const reel: string[] = new Array(32).fill('')
+  
+  // Place blanks
+  const blankPositions = [0, 5, 10, 15, 20] // Simple non-adjacent positions
+  blankPositions.forEach(pos => {
+    reel[pos] = '--'
+  })
+  
+  // Place required symbols
+  reel[1] = '1C'
+  reel[2] = '2C' 
+  reel[3] = '3C'
+  reel[4] = 'BG'
+  
+  // Fill remaining with duplicates
+  const remaining = []
+  for (let i = 0; i < 32; i++) {
+    if (reel[i] === '') remaining.push(i)
+  }
+  
+  const duplicates = [
+    ...Array(10).fill('1C'),
+    ...Array(7).fill('2C'),
+    ...Array(4).fill('3C'),
+    ...Array(2).fill('BG')
+  ]
+  
+  const shuffled = shuffleArray(duplicates)
+  remaining.forEach((pos, i) => {
+    if (i < shuffled.length) reel[pos] = shuffled[i]
+  })
+  
+  return reel
 }
 
 const SHUFFLED_REELS = {
@@ -202,18 +364,39 @@ const generateReelResult = () => {
   ]
 }
 
+// Generate display reels once at game start
+const DISPLAY_REELS = [
+  generateDisplayReel(),
+  generateDisplayReel(),
+  generateDisplayReel()
+]
+
 export const useGameStore = create<GameStore>((set, get) => ({
   // Initial state
   balance: 100.00,
   isSpinning: false,
   lastWin: 0,
   reels: [
-    ['--', '1C', '--'],  // Keep 3 symbols for animation but only show middle
-    ['--', '2C', '--'],  // Keep 3 symbols for animation but only show middle
-    ['--', '3C', '--']   // Keep 3 symbols for animation but only show middle
+    ['--', '1C', '--'],  // Backend reels (will be updated with actual logic)
+    ['--', '2C', '--'],  
+    ['--', '3C', '--']   
   ],
+  displayReels: DISPLAY_REELS, // 32-symbol reels for animation
   currentBet: 1.00, // Default to $1 bet
   winningCombination: null,
+  animationState: {
+    isReelSpinning: [false, false, false],
+    currentPositions: [0, 0, 0],
+    targetPositions: [0, 0, 0],
+    spinSpeeds: [0, 0, 0]
+  },
+
+  // Helper function to find target position in display reel
+  findTargetPosition: (backendSymbol: string, displayReel: string[]): number => {
+    // Find first occurrence of the symbol in display reel
+    const position = displayReel.findIndex(symbol => symbol === backendSymbol)
+    return position !== -1 ? position : 0 // Fallback to position 0 if not found
+  },
 
   // Actions
   spin: () => {
@@ -228,25 +411,70 @@ export const useGameStore = create<GameStore>((set, get) => ({
       winningCombination: null
     })
 
-    // Simulate spinning delay
-    setTimeout(() => {
-      // Generate new random reels using proper reel strips
-      const newReels = generateReelResult()
-      
-      const { totalWin, winningCombination } = checkWin(newReels)
-      const currentState = get()
-      
-      // Calculate actual win amount based on bet (payout table is for 1-coin bets = $1.00)
-      const actualWin = Math.round((totalWin * currentState.currentBet) * 100) / 100
+    // Generate backend result (for math/RTP calculations)
+    const backendReels = generateReelResult()
+    const { totalWin, winningCombination } = checkWin(backendReels)
+    
+    // Calculate actual payout (multiply by bet)
+    const actualWin = Math.round((totalWin * state.currentBet) * 100) / 100
 
-      set({
-        reels: newReels,
-        isSpinning: false,
+    // Calculate target positions on display reels to match backend result
+    const middleSymbols = backendReels.map(reel => reel[1]) // Get middle symbols from backend
+    const targetPositions = middleSymbols.map((symbol, index) => 
+      get().findTargetPosition(symbol, state.displayReels[index])
+    )
+
+    // Start animation sequence - all reels spinning initially
+    set({
+      reels: backendReels, // Store backend result for math
+      animationState: {
+        isReelSpinning: [true, true, true],
+        currentPositions: state.animationState.currentPositions,
+        targetPositions,
+        spinSpeeds: [20, 20, 20] // High speed initially
+      }
+    })
+
+    // Staggered reel stopping sequence
+    setTimeout(() => {
+      // Stop reel 1
+      set(state => ({
+        animationState: {
+          ...state.animationState,
+          isReelSpinning: [false, true, true],
+          spinSpeeds: [0, 20, 20],
+          currentPositions: [targetPositions[0], state.animationState.currentPositions[1], state.animationState.currentPositions[2]]
+        }
+      }))
+    }, 1500)
+
+    setTimeout(() => {
+      // Stop reel 2
+      set(state => ({
+        animationState: {
+          ...state.animationState,
+          isReelSpinning: [false, false, true],
+          spinSpeeds: [0, 0, 20],
+          currentPositions: [targetPositions[0], targetPositions[1], state.animationState.currentPositions[2]]
+        }
+      }))
+    }, 2500)
+
+    setTimeout(() => {
+      // Stop reel 3 and finalize
+      set(state => ({
         lastWin: actualWin,
+        balance: Math.round((state.balance + actualWin) * 100) / 100,
+        isSpinning: false,
         winningCombination,
-        balance: Math.round((currentState.balance + actualWin) * 100) / 100
-      })
-    }, 1000)
+        animationState: {
+          ...state.animationState,
+          isReelSpinning: [false, false, false],
+          spinSpeeds: [0, 0, 0],
+          currentPositions: targetPositions
+        }
+      }))
+    }, 3500)
   },
 
   increaseBet: () => {
