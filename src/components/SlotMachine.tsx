@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import SlotCanvas from './SlotCanvas'
 import GameUI from './GameUI'
+import WinEffectTester from './WinEffectTester'
 
 const SlotMachine = () => {
   const containerRef = useRef<HTMLDivElement>(null)
+  const [showTester, setShowTester] = useState(false)
 
   useEffect(() => {
     // Entrance animation
@@ -56,6 +58,22 @@ const SlotMachine = () => {
       
       {/* Game Controls */}
       <GameUI />
+      
+      {/* Tester Panel Button */}
+      <div className="p-4 border-t border-white/10">
+        <button
+          onClick={() => setShowTester(true)}
+          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-2 px-4 rounded-lg transition-all duration-200 hover:scale-105 text-sm font-medium"
+        >
+          🎨 Test Win Background Effects
+        </button>
+      </div>
+      
+      {/* Win Effect Tester Modal */}
+      <WinEffectTester 
+        isVisible={showTester}
+        onClose={() => setShowTester(false)}
+      />
     </div>
   )
 }
