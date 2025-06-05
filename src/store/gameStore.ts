@@ -391,11 +391,40 @@ export const useGameStore = create<GameStore>((set, get) => ({
     spinSpeeds: [0, 0, 0]
   },
 
-  // Helper function to find target position in display reel
+  // Helper function to find target position in display reel for smooth animation
   findTargetPosition: (backendSymbol: string, displayReel: string[]): number => {
-    // Find first occurrence of the symbol in display reel
-    const position = displayReel.findIndex(symbol => symbol === backendSymbol)
-    return position !== -1 ? position : 0 // Fallback to position 0 if not found
+    // Find all occurrences of the symbol in display reel
+    const positions: number[] = []
+    displayReel.forEach((symbol, index) => {
+      if (symbol === backendSymbol) {
+        positions.push(index)
+      }
+    })
+    
+    if (positions.length === 0) {
+      console.warn(`Symbol ${backendSymbol} not found in display reel, using position 0`)
+      return 0
+    }
+    
+    // For smooth animation, we want to pick a position that allows for good visual continuity
+    // If multiple positions exist, prefer one that's not too close to current position to allow for spinning effect
+    const currentAnimationState = get().animationState
+    const currentPosition = currentAnimationState.currentPositions[displayReel === get().displayReels[0] ? 0 : displayReel === get().displayReels[1] ? 1 : 2] || 0
+    
+    // Find the position that gives us the most spinning distance (but not too much)
+    let bestPosition = positions[0]
+    let bestDistance = Math.abs(positions[0] - currentPosition)
+    
+    for (const pos of positions) {
+      const distance = Math.abs(pos - currentPosition)
+      // Prefer positions that are 8-20 symbols away for good spinning effect
+      if (distance >= 8 && distance <= 20 && distance > bestDistance) {
+        bestPosition = pos
+        bestDistance = distance
+      }
+    }
+    
+    return bestPosition
   },
 
   // Actions
@@ -435,9 +464,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
     })
 
-    // Staggered reel stopping sequence
+    // Staggered reel stopping sequence: LEFT → MIDDLE → RIGHT
     setTimeout(() => {
-      // Stop reel 1
+      // Stop reel 1 (LEFT) first - classic slot machine behavior
       set(state => ({
         animationState: {
           ...state.animationState,
@@ -446,10 +475,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
           currentPositions: [targetPositions[0], state.animationState.currentPositions[1], state.animationState.currentPositions[2]]
         }
       }))
-    }, 1500)
+    }, 1800) // Slightly longer spin time for drama
 
     setTimeout(() => {
-      // Stop reel 2
+      // Stop reel 2 (MIDDLE) second
       set(state => ({
         animationState: {
           ...state.animationState,
@@ -458,10 +487,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
           currentPositions: [targetPositions[0], targetPositions[1], state.animationState.currentPositions[2]]
         }
       }))
-    }, 2500)
+    }, 3000) // More dramatic pause between stops
 
     setTimeout(() => {
-      // Stop reel 3 and finalize
+      // Stop reel 3 (RIGHT) last and finalize game
       set(state => ({
         lastWin: actualWin,
         balance: Math.round((state.balance + actualWin) * 100) / 100,
@@ -474,7 +503,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           currentPositions: targetPositions
         }
       }))
-    }, 3500)
+    }, 4200) // Final dramatic pause
   },
 
   increaseBet: () => {
