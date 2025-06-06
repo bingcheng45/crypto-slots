@@ -1,4 +1,5 @@
 import SlotMachine from '@/components/SlotMachine'
+import WinBackgroundEffect from '@/components/WinBackgroundEffect'
 import { BackgroundProvider } from '@/contexts/BackgroundContext'
 
 export default function Home() {
@@ -12,6 +13,9 @@ export default function Home() {
         <div className="relative z-10">
           <SlotMachine />
         </div>
+        
+        {/* Win Background Effects - Auto-triggers on wins */}
+        <WinBackgroundEffect />
       </main>
     </BackgroundProvider>
   )
